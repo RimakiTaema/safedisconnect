@@ -9,5 +9,6 @@ public final class Safedisconnect {
 
     public static void init() {
         log.info("Initializing Safedisconnect");
+        log.info("Hello World!");
     }
 }
