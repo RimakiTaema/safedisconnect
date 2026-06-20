@@ -87,10 +87,10 @@ subprojects {
     }
     tasks.register("publishAll") {
         dependsOn(
-                "fabric:modrinth",
-                "fabric:publishCurseForge",
-                "neoforge:modrinth",
-                "neoforge:publishCurseForge"
+                ":fabric:modrinth",
+                ":fabric:publishCurseForge",
+                ":neoforge:modrinth",
+                ":neoforge:publishCurseForge"
         )
     }
 }
