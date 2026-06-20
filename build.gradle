@@ -59,15 +59,34 @@ subprojects {
         it.options.release = 21
     }
 
-    modrinth {
-        token = System.getenv("MODRINTH_TOKEN")
-        projectId = "safedisconnect"
-        uploadFile = remapJar
-        gameVersions = ["1.21.1"]
-        loaders = ["neoforge","fabric"]
-        versionNumber = modVersion
-        versionType = releaseChannel
+    project(":fabric") {
+        modrinth {
+            token = System.getenv("MODRINTH_TOKEN")
+            projectId = "safedisconnect"
 
+            uploadFile = remapJar
+
+            gameVersions = ["1.21.1"]
+            loaders = ["fabric"]
+
+            versionNumber = modVersion
+            versionType = releaseChannel
+        }
+    }
+
+    project(":neoforge") {
+        modrinth {
+            token = System.getenv("MODRINTH_TOKEN")
+            projectId = "safedisconnect"
+
+            uploadFile = remapJar
+
+            gameVersions = ["1.21.1"]
+            loaders = ["neoforge"]
+
+            versionNumber = modVersion
+            versionType = releaseChannel
+        }
     }
 
     tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge) {
