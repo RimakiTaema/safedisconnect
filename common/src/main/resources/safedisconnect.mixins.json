@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "net.rimaki.safedisconnect.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "client": [
+    "MultiplayerScreenModification"
+  ],
+  "mixins": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
