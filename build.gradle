@@ -1,9 +1,27 @@
 plugins {
-    // Change 1.17-SNAPSHOT to a stable release line compatible with Gradle 8.x
     id 'dev.architectury.loom' version '1.9.428' apply false
     id 'architectury-plugin' version '3.4.161'
     id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id "com.modrinth.minotaur" version "2.+" apply false
+    id "net.darkhax.curseforgegradle" version "1.1.28" apply false
 }
+
+def buildDate = new Date().format("yyyyMMdd")
+
+def modVersion = System.getenv("VERSION") ?: "dev-${buildDate}"
+
+def releaseChannel = [
+        "dev-"  : "beta",
+        "alpha-": "alpha",
+        "beta-" : "beta"
+].find { prefix, _ ->
+    modVersion.startsWith(prefix)
+}?.value ?: "release"
+
+def taskNames = gradle.startParameter.taskNames*.toLowerCase()
+
+def isModrinthPublish = taskNames.any { it.contains("modrinth") }
+def isCurseForgePublish = taskNames.any { it.contains("curseforge") }
 
 architectury {
     minecraft = project.minecraft_version
@@ -11,25 +29,21 @@ architectury {
 
 allprojects {
     group = rootProject.maven_group
-    version = rootProject.mod_version
+    version = modVersion
 }
 
 subprojects {
     apply plugin: 'dev.architectury.loom'
     apply plugin: 'architectury-plugin'
     apply plugin: 'maven-publish'
+    apply plugin: "com.modrinth.minotaur"
+    apply plugin: "net.darkhax.curseforgegradle"
 
     base {
-        // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
         archivesName = "$rootProject.archives_name-$project.name"
     }
 
     repositories {
-        // Add repositories to retrieve artifacts from in here.
-        // You should only use this when depending on other mods because
-        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-        // for more information about repositories.
     }
 
     dependencies {
@@ -38,9 +52,6 @@ subprojects {
     }
 
     java {
-        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-        // if it is present.
-        // If you remove this line, sources will not be generated.
         withSourcesJar()
 
         sourceCompatibility = JavaVersion.VERSION_21
@@ -49,5 +60,37 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         it.options.release = 21
+    }
+
+    if (isModrinthPublish) {
+        modrinth {
+            token = System.getenv("MODRINTH_TOKEN")
+            projectId = "safedisconnect"
+            uploadfile = withSourcesJar
+            gameVersions = "1.21.1"
+            loaders = ["neoforge","fabric"]
+            versionNumber = modVersion
+            versionType = releaseChannel
+        }
+    }
+
+    tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge) {
+
+        apiToken = System.getenv("CURSEFORGE_TOKEN")
+
+        def mainFile = upload(1068018, jar)
+
+        mainFile.releaseType = releaseChannel
+        mainFile.displayName = "SafeDisconnect ${modVersion}"
+        mainFile.addGameVersion('1.21.1')
+        mainFile.addEnvironment("Client")
+    }
+    tasks.register("publishAll") {
+        dependsOn(
+                "fabric:modrinth",
+                "fabric:publishCurseForge",
+                "neoforge:modrinth",
+                "neoforge:publishCurseForge"
+        )
     }
 }
