@@ -20,9 +20,6 @@ def releaseChannel = [
 
 def taskNames = gradle.startParameter.taskNames*.toLowerCase()
 
-def isModrinthPublish = taskNames.any { it.contains("modrinth") }
-def isCurseForgePublish = taskNames.any { it.contains("curseforge") }
-
 architectury {
     minecraft = project.minecraft_version
 }
@@ -62,23 +59,22 @@ subprojects {
         it.options.release = 21
     }
 
-    if (isModrinthPublish) {
-        modrinth {
-            token = System.getenv("MODRINTH_TOKEN")
-            projectId = "safedisconnect"
-            uploadfile = withSourcesJar
-            gameVersions = "1.21.1"
-            loaders = ["neoforge","fabric"]
-            versionNumber = modVersion
-            versionType = releaseChannel
-        }
+    modrinth {
+        token = System.getenv("MODRINTH_TOKEN")
+        projectId = "safedisconnect"
+        uploadFile = remapJar
+        gameVersions = ["1.21.1"]
+        loaders = ["neoforge","fabric"]
+        versionNumber = modVersion
+        versionType = releaseChannel
+
     }
 
     tasks.register("publishCurseForge", net.darkhax.curseforgegradle.TaskPublishCurseForge) {
 
         apiToken = System.getenv("CURSEFORGE_TOKEN")
 
-        def mainFile = upload(1068018, jar)
+        def mainFile = upload(1068018, remapJar)
 
         mainFile.releaseType = releaseChannel
         mainFile.displayName = "SafeDisconnect ${modVersion}"
